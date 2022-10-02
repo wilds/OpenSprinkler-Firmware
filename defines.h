@@ -26,9 +26,11 @@
 
 //#define ENABLE_DEBUG  // enable serial debug
 
+//#define CUSTOM_ESP8266_HW
+
 typedef unsigned char byte;
 typedef unsigned long ulong;
-  
+
 #define TMP_BUFFER_SIZE      255   // scratch buffer size
 
 /** Firmware version, hardware version, and maximal values */
@@ -199,7 +201,7 @@ enum {
 	IOPT_SPE_AUTO_REFRESH,
 	IOPT_IFTTT_ENABLE,
 	IOPT_SENSOR1_TYPE,
-	IOPT_SENSOR1_OPTION,	
+	IOPT_SENSOR1_OPTION,
 	IOPT_SENSOR2_TYPE,
 	IOPT_SENSOR2_OPTION,
 	IOPT_SENSOR1_ON_DELAY,
@@ -242,7 +244,42 @@ enum {
 #undef OS_HW_VERSION
 
 /** Hardware defines */
-#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) // for OS 2.3
+#if defined(CUSTOM_ESP8266_HW)
+
+	#define OS_HW_VERSION    (OS_HW_VERSION_BASE+99)
+	#define IOEXP_PIN        0x80 // base for pins on main IO expander
+	#define MAIN_I2CADDR     0x20 // main IO expander I2C address
+	#define ACDR_I2CADDR     0x21 // ac driver I2C address
+	#define DCDR_I2CADDR     0x22 // dc driver I2C address
+	#define LADR_I2CADDR     0x23 // latch driver I2C address
+	#define EXP_I2CADDR_BASE 0x24 // base of expander I2C address
+	#define LCD_I2CADDR      -1 // 128x64 OLED display I2C address
+
+	#define PIN_CURR_SENSE    A0
+	#define PIN_FREE_LIST     { D0, D1, D2, D3, D4, D5, D6, D7, D8, RX, TX } // no free GPIO pin at the moment
+	#define ETHER_BUFFER_SIZE   2048
+
+	#define PIN_ETHER_CS       -1 // ENC28J60 CS (chip select pin) is 16 on OS 3.2.
+
+	// pins on PCA9555A IO expander have pin numbers IOEXP_PIN+i
+	#define IO_CONFIG         0x1000 // config bits
+	#define IO_OUTPUT         0x1E00 // output bits
+	#define PIN_BUTTON_1      -1 //D4 // button 1
+	#define PIN_BUTTON_2      -1 //D3 // button 2
+	#define PIN_BUTTON_3      -1 //D5 // button 3
+	#define PIN_RFTX          -1
+	#define PIN_BOOST         -1
+	#define PIN_BOOST_EN      -1
+	#define PIN_LATCH_COMA    -1 // latch COM+ (anode)
+	#define V2_PIN_SRLAT      -1 // shift register latch
+	#define V2_PIN_SRCLK      -1 // shift register clock
+	#define V2_PIN_SRDAT      -1 // shift register data
+	#define PIN_LATCH_COMK    -1 // latch COM- (cathode)
+	#define PIN_LATCH_COM     -1
+	#define PIN_SENSOR1       -1 //D6 // sensor 1
+	#define PIN_SENSOR2       -1 //D7 // sensor 2
+
+#elif defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__) // for OS 2.3
 
 	#define OS_HW_VERSION   (OS_HW_VERSION_BASE+23)
 	#define PIN_FREE_LIST		{2,10,12,13,14,15,18,19}  // Free GPIO pins
@@ -274,7 +311,7 @@ enum {
 	#define PIN_BOOST_EN      23    // boost voltage enable pin
 
 	#define PIN_ETHER_CS       4    // Ethernet controller chip select pin
-	#define PIN_SENSOR1				11		// 
+	#define PIN_SENSOR1				11		//
 	#define PIN_SD_CS          0    // SD card chip select pin
 	#define PIN_FLOWSENSOR_INT 1    // flow sensor interrupt pin (INT1)
 	#define PIN_EXP_SENSE      4    // expansion board sensing pin (A4)
@@ -287,7 +324,7 @@ enum {
 
 	#define pinModeExt        pinMode
 	#define digitalReadExt    digitalRead
-	#define digitalWriteExt   digitalWrite  
+	#define digitalWriteExt   digitalWrite
 
 #elif defined(ESP8266) // for ESP8266
 
@@ -306,7 +343,7 @@ enum {
 
 	#define PIN_ETHER_CS       16 // ENC28J60 CS (chip select pin) is 16 on OS 3.2.
 
-	/* To accommodate different OS30 versions, we use software defines pins */ 
+	/* To accommodate different OS30 versions, we use software defines pins */
 	extern byte PIN_BUTTON_1;
 	extern byte PIN_BUTTON_2;
 	extern byte PIN_BUTTON_3;
@@ -434,7 +471,7 @@ enum {
 		inline  void DEBUG_PRINT(const char*s) {printf("%s", s);}
 		#define DEBUG_PRINTLN(x)        {DEBUG_PRINT(x);printf("\n");}
 	#endif
-  
+
 #else
 
 	#define DEBUG_BEGIN(x)   {}
@@ -442,7 +479,7 @@ enum {
 	#define DEBUG_PRINTLN(x) {}
 
 #endif
-  
+
 /** Re-define avr-specific (e.g. PGM) types to use standard types */
 #if !defined(ARDUINO)
 	#include <stdio.h>

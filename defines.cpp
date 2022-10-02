@@ -2,6 +2,8 @@
 
 #include "defines.h"
 
+#if !defined(CUSTOM_ESP8266_HW)
+
 byte PIN_BUTTON_1 = 255;
 byte PIN_BUTTON_2 = 255;
 byte PIN_BUTTON_3 = 255;
@@ -16,4 +18,5 @@ byte PIN_SENSOR1 = 255;
 byte PIN_SENSOR2 = 255;
 byte PIN_IOEXP_INT = 255;
 
+#endif
 #endif
