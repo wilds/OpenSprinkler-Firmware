@@ -75,7 +75,11 @@ extern char ether_buffer[];
 extern ProgramData pd;
 
 #if defined(ESP8266)
-	SSD1306Display OpenSprinkler::lcd(0x3c, SDA, SCL);
+	#if (LCD_I2CADDR > 0)
+	SSD1306Display OpenSprinkler::lcd(LCD_I2CADDR, SDA, SCL);
+	#else
+	SSD1306Display OpenSprinkler::lcd(LCD_I2CADDR, -1, -1);
+	#endif
 	byte OpenSprinkler::state = OS_STATE_INITIAL;
 	byte OpenSprinkler::prev_station_bits[MAX_NUM_BOARDS];
 	IOEXP* OpenSprinkler::expanders[MAX_NUM_BOARDS/2];
@@ -721,6 +725,23 @@ void OpenSprinkler::begin() {
 	else if(detect_i2c(DCDR_I2CADDR)) hw_type = HW_TYPE_DC;
 	else if(detect_i2c(LADR_I2CADDR)) hw_type = HW_TYPE_LATCH;
 
+	#if defined(CUSTOM_ESP8266_HW)
+	// custom esp8266 hardware
+
+	if(hw_type==HW_TYPE_DC) {
+		drio = new PCA9555(DCDR_I2CADDR);
+	} else if(hw_type==HW_TYPE_LATCH) {
+		drio = new PCA9555(LADR_I2CADDR);
+	} else {
+		drio = new PCA9555(ACDR_I2CADDR);
+	}
+	mainio = drio;
+
+	hw_rev = 0;
+	mainio->i2c_write(NXP_CONFIG_REG, IO_CONFIG);
+	mainio->i2c_write(NXP_OUTPUT_REG, IO_OUTPUT);
+
+	#else
 	/* detect hardware revision type */
 	if(detect_i2c(MAIN_I2CADDR)) {	// check if main PCF8574 exists
 		/* assign revision 0 pins */
@@ -800,7 +821,7 @@ void OpenSprinkler::begin() {
 			PIN_SENSOR2 = V2_PIN_SENSOR2;
 		}
 	}
-
+	#endif
 	/* detect expanders */
 	for(byte i=0;i<(MAX_NUM_BOARDS)/2;i++)
 		expanders[i] = NULL;
